@@ -9,7 +9,7 @@ env:
 before_install:
   - docker version
   - docker pull $IMG
-  - docker run --rm -u openwrt -v $PWD:/work $IMG /work/build.sh
+  - docker run --rm -u openwrt -v $PWD:/work $IMG /bin/sh /work/build.sh
 
 script:
   - ls -la
