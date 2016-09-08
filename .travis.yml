@@ -5,11 +5,23 @@ services:
 env:
   global:
     - IMG=yhnw/openwrt-sdk
+  matrix:
+    - ARCH=15.05.1-ar71xx PACKAGE_DIR=bin/ar71xx/packages
+    - ARCH=lede-ar71xx    PACKAGE_DIR=bin/packages/mips_24kc
 
 before_install:
   - docker version
-  - docker pull $IMG
-  - docker run --rm -u openwrt -v $PWD:/work $IMG /bin/sh /work/build.sh
+  - docker run --rm -u openwrt -v $PWD:/work $IMG:$ARCH /bin/sh /work/build.sh $ARCH $PACKAGE_DIR
 
 script:
   - ls -la
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "eqOp/brxGZoJXR/Bfd3jjxfwycxmysYimrKn/EK5Q0ov56Ox7DsPnJqq3ZeCyL4qXJz8IHiuAkizomjf91jd0Ni4G2Tt1P1FNW0lGP07J37XskdW2dHT9soY44STgn0tINxmScQ34JvOSwBV6qEnNeRgVi6OIrtfuXbHSCPMA3V5fL347Yw57cQ2o7Ap1MpsPv1A9uvDmdXL9ouV4o2NM9RK+cyk0p9c9m97wXr2+b23T5EqxLeEqETDC2hEX+l4yYMylZ50/aEiNHOJpuRcc1ZLtQ4WGn7Dl7AFPR6QACzFyb3+4jSDMqSpHfWQO24WC3hMd+TwseY00GPddkOOetqUr71YlkK0Xl8CYwUZGFXVdR/yDG5VFRmZ5kC5sYX9zXvuNhYYsDprpFMKbnreCsVNx0FFpLlhufojDqLd3gTqBDZD0QnGVsZgivh7C4nX7OR/p594QRm/2ALgtv8B4mJoPfC+ozM6ecDO+Fj8ez8oZL8QRGOWxc14gWWYRmZt7/HG16E5bqUMCpf/SsCcJAI2x0Tzco9lWfdBUUsYjcZIIRJ0S5PbnYEex07fP2U2pS6FubrVOsHVCPG4wzV4S1Ot1xH9n5IhdgrDdNr+KKw/IMifscQ/Xt5jZHF4gqM8/qk3zReeN5Q+n3/151RaR+wkkOTCXZ+8QSp8ylo3C/A="
+  file_glob: true
+  file: "*.ipk"
+  skip_cleanup: true
+  on:
+    tags: true
