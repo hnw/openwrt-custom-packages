@@ -11,17 +11,39 @@ env:
 
 before_install:
   - docker version
-  - docker run --rm -u openwrt -v $PWD:/work $IMG:$ARCH /bin/sh /work/build.sh $ARCH $PACKAGE_DIR
 
 script:
+  - docker run --rm -u openwrt -v $PWD:/work $IMG:$ARCH /bin/sh /work/build.sh $ARCH $PACKAGE_DIR
   - ls -la
 
+before_deploy:
+  - if [ -n "$TRAVIS_TAG" ]; then
+      export VERSION=stable;
+      export VCS_TAG="$TRAVIS_TAG";
+      export DESC="Stable release";
+      export UPLOAD_DIR_SUFFIX=;
+    else
+      export VERSION=develop;
+      export VCS_TAG=HEAD;
+      export DESC="Development snapshot";
+      export UPLOAD_DIR_SUFFIX=-dev;
+    fi
+  - RELEASED=$(date +%Y-%m-%d) envsubst < descriptor.json.in > descriptor.json
+  - cat descriptor.json
+
 deploy:
-  provider: releases
-  api_key:
-    secure: "eqOp/brxGZoJXR/Bfd3jjxfwycxmysYimrKn/EK5Q0ov56Ox7DsPnJqq3ZeCyL4qXJz8IHiuAkizomjf91jd0Ni4G2Tt1P1FNW0lGP07J37XskdW2dHT9soY44STgn0tINxmScQ34JvOSwBV6qEnNeRgVi6OIrtfuXbHSCPMA3V5fL347Yw57cQ2o7Ap1MpsPv1A9uvDmdXL9ouV4o2NM9RK+cyk0p9c9m97wXr2+b23T5EqxLeEqETDC2hEX+l4yYMylZ50/aEiNHOJpuRcc1ZLtQ4WGn7Dl7AFPR6QACzFyb3+4jSDMqSpHfWQO24WC3hMd+TwseY00GPddkOOetqUr71YlkK0Xl8CYwUZGFXVdR/yDG5VFRmZ5kC5sYX9zXvuNhYYsDprpFMKbnreCsVNx0FFpLlhufojDqLd3gTqBDZD0QnGVsZgivh7C4nX7OR/p594QRm/2ALgtv8B4mJoPfC+ozM6ecDO+Fj8ez8oZL8QRGOWxc14gWWYRmZt7/HG16E5bqUMCpf/SsCcJAI2x0Tzco9lWfdBUUsYjcZIIRJ0S5PbnYEex07fP2U2pS6FubrVOsHVCPG4wzV4S1Ot1xH9n5IhdgrDdNr+KKw/IMifscQ/Xt5jZHF4gqM8/qk3zReeN5Q+n3/151RaR+wkkOTCXZ+8QSp8ylo3C/A="
-  file_glob: true
-  file: "*.ipk"
-  skip_cleanup: true
-  on:
-    tags: true
+  - provider: releases
+    api_key:
+      secure: "eqOp/brxGZoJXR/Bfd3jjxfwycxmysYimrKn/EK5Q0ov56Ox7DsPnJqq3ZeCyL4qXJz8IHiuAkizomjf91jd0Ni4G2Tt1P1FNW0lGP07J37XskdW2dHT9soY44STgn0tINxmScQ34JvOSwBV6qEnNeRgVi6OIrtfuXbHSCPMA3V5fL347Yw57cQ2o7Ap1MpsPv1A9uvDmdXL9ouV4o2NM9RK+cyk0p9c9m97wXr2+b23T5EqxLeEqETDC2hEX+l4yYMylZ50/aEiNHOJpuRcc1ZLtQ4WGn7Dl7AFPR6QACzFyb3+4jSDMqSpHfWQO24WC3hMd+TwseY00GPddkOOetqUr71YlkK0Xl8CYwUZGFXVdR/yDG5VFRmZ5kC5sYX9zXvuNhYYsDprpFMKbnreCsVNx0FFpLlhufojDqLd3gTqBDZD0QnGVsZgivh7C4nX7OR/p594QRm/2ALgtv8B4mJoPfC+ozM6ecDO+Fj8ez8oZL8QRGOWxc14gWWYRmZt7/HG16E5bqUMCpf/SsCcJAI2x0Tzco9lWfdBUUsYjcZIIRJ0S5PbnYEex07fP2U2pS6FubrVOsHVCPG4wzV4S1Ot1xH9n5IhdgrDdNr+KKw/IMifscQ/Xt5jZHF4gqM8/qk3zReeN5Q+n3/151RaR+wkkOTCXZ+8QSp8ylo3C/A="
+    file_glob: true
+    file: "pkgs-for-github/*.ipk"
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: bintray
+    file: "descriptor.json"
+    user: hnw
+    key:
+      secure: "IFGTZmgOQZmcR9rFhM5oBFRO8N3mThFqjmQ6LiHW1gcynyNFoU2n5uBUBeVQjB1ayfW+lvXHuFtPCrcoz7lFg5GKhoccWCA9th6rC7OGtGl9ojPcDvBgjyHU4FJ8AD0g79qrxZ7FC8fF/aiHRGhgZvkXLKIFK5v3roS5lQ4mPW1LiegQRvS9gKeogMvZiREt7PKy4rCTsvNpUH/7Ps2kgLvSqgUvypMq5eEFsUa9pt1RGsSJFNQnDkoffNHNlGr5smtF+FD7+FbMNo/AvyBTRrkVGRS+7O+gqZw02EbX/JuSpT72+A+eCiiw15ba6r1ASFeirQyellg9s15TehUbiBaaHZjnBFXSVxFeZihXbpoGbZWYelF7Z1NXge+99p5amNdOx82NDEx/TycI5ILJfQcSAJ8Wa3O9LfTfmyms9pMGm4xF/ffK5+yrBBpUFlQnNtdWwepxlRd7S/9hNpyZnEFanhzO0dv6Pcx7gldDrafClh/lfWY7S8pFRVrbLOAFuYr85D0iSGnfUPB+aQAIgjRdyQzVP5c17UB4HfDXbMVkPdSLuzuBiRqfyItObEEEvbv22G7YFf3rVaVTMIFDIAbIUoskqlV/5Y5dTQH2uWDJUJQmTjRe72Z9YUI39ARlPrwX2Jhlcb89c18GMz6HQh7JhxS3cwOGn7rfvpMi/oE="
+    on:
+      all_branches: true

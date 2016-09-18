@@ -1,7 +1,10 @@
+set -eu
+
 PKGS="lv"
 ARCH=$1
 PACKAGE_DIR=$2
 FEED_NAME=custom
+
 cd /home/openwrt/sdk
 rm -rf bin
 cp feeds.conf.default feeds.conf
@@ -14,8 +17,9 @@ for pkg in $PKGS; do
 done
 ls -laR bin
 cd $PACKAGE_DIR/$FEED_NAME
+mkdir -p /work/pkgs-for-bintray /work/pkgs-for-github
 for file in *; do
-    mv $file ${ARCH}-${file}
+    cp $file /work/pkgs-for-bintray
+    cp $file /work/pkgs-for-github/${ARCH}-${file}
 done
-cp ./${ARCH}-* /work
-ls -la /work
+ls -la /work/pkgs-for-bintray /work/pkgs-for-github
